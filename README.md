@@ -1,66 +1,55 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/your_image"
-        android:layout_centerInParent="true"
-        android:adjustViewBounds="true"
-        android:tag="draggable" />
-
-</RelativeLayout>
-import android.graphics.Rect;
+import android.content.ClipData;
 import android.os.Bundle;
+import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+public class DragDropActivity extends AppCompatActivity implements View.OnTouchListener, View.OnDragListener {
 
     private ImageView imageView;
-    private int xDelta;
-    private int yDelta;
-    private Rect hitRect = new Rect();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_drag_drop);
 
         imageView = findViewById(R.id.imageView);
         imageView.setOnTouchListener(this);
+
+        findViewById(R.id.container).setOnDragListener(this);
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent event) {
-        final int x = (int) event.getRawX();
-        final int y = (int) event.getRawY();
+    public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            ClipData clipData = ClipData.newPlainText("", "");
+            View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
+            v.startDrag(clipData, shadowBuilder, v, 0);
+            return true;
+        }
+        return false;
+    }
 
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                RelativeLayout.LayoutParams lParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
-                xDelta = x - lParams.leftMargin;
-                yDelta = y - lParams.topMargin;
+    @Override
+    public boolean onDrag(View v, DragEvent event) {
+        int action = event.getAction();
+        switch (action) {
+            case DragEvent.ACTION_DROP:
+                View view = (View) event.getLocalState();
+                // Pozycja dotknięcia na ekranie
+                int x = (int) event.getX();
+                int y = (int) event.getY();
+                // Ustawienie nowej pozycji obrazka
+                view.setX(x - view.getWidth() / 2);
+                view.setY(y - view.getHeight() / 2);
+                view.setVisibility(View.VISIBLE);
                 break;
-            case MotionEvent.ACTION_MOVE:
-                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
-                layoutParams.leftMargin = x - xDelta;
-                layoutParams.topMargin = y - yDelta;
-                layoutParams.rightMargin = 0;
-                layoutParams.bottomMargin = 0;
-                view.setLayoutParams(layoutParams);
-                break;
-            case MotionEvent.ACTION_UP:
-                view.getHitRect(hitRect);
-                if (hitRect.contains(x, y)) {
-                    // Tutaj możesz dodać obsługę upuszczenia w określonym miejscu
-                    // Na przykład wywołaj metodę do obsługi upuszczenia
+            case DragEvent.ACTION_DRAG_ENDED:
+                // W przypadku zakończenia przeciągania, ustaw widoczność obrazka na widoczny
+                if (!event.getResult()) {
+                    ((View) event.getLocalState()).setVisibility(View.VISIBLE);
                 }
                 break;
         }
