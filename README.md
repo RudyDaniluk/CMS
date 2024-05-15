@@ -64,3 +64,45 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 }
+.
+
+ .
+ .
+ imageView.setOnDragListener(new View.OnDragListener() {
+    @Override
+    public boolean onDrag(View v, DragEvent event) {
+        switch (event.getAction()) {
+            case DragEvent.ACTION_DROP:
+                // Pobierz współrzędne przeciąganego obrazka
+                float x = event.getX();
+                float y = event.getY();
+
+                // Ustaw nowe współrzędne dla ImageView
+                imageView.setX(x - imageView.getWidth() / 2);
+                imageView.setY(y - imageView.getHeight() / 2);
+                
+                // Sprawdź czy ImageView wychodzi poza granice rodzica i dostosuj je w razie potrzeby
+                int parentWidth = ((View) imageView.getParent()).getWidth();
+                int parentHeight = ((View) imageView.getParent()).getHeight();
+                if (imageView.getX() < 0) {
+                    imageView.setX(0);
+                } else if (imageView.getX() + imageView.getWidth() > parentWidth) {
+                    imageView.setX(parentWidth - imageView.getWidth());
+                }
+                if (imageView.getY() < 0) {
+                    imageView.setY(0);
+                } else if (imageView.getY() + imageView.getHeight() > parentHeight) {
+                    imageView.setY(parentHeight - imageView.getHeight());
+                }
+                
+                break;
+            case DragEvent.ACTION_DRAG_ENDED:
+                if (!event.getResult()) {
+                    // Obsługa sytuacji, gdy przeciąganie jest anulowane lub nie powiedzie się
+                    // Możesz tu wykonać odpowiednie czynności, np. przywrócenie oryginalnego obrazka
+                }
+                break;
+        }
+        return true;
+    }
+});
